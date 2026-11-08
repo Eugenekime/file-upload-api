@@ -83,7 +83,7 @@ file-upload-api/
 Clone the repository:
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Eugenekime/file-upload-api/tree/feature/image-processing
 cd file-upload-api
 ```
 
