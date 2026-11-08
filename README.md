@@ -1,39 +1,89 @@
-# File Upload API
+# Image Upload and Processing API
 
-A RESTful file upload API built with **Node.js, Express, TypeScript, and Multer**.
+A RESTful API built with **Node.js, TypeScript, Express, Multer, and Sharp** for uploading, processing, transforming, and optimizing images.
 
-The API supports single and multiple file uploads, server-side file validation, file size restrictions, and local disk storage.
+The API supports single and multiple image uploads, resizing, thumbnails, responsive image generation, metadata extraction, format conversion, and watermarking.
 
 ## Features
 
-- Single and multiple file uploads.
-- File storage using Multer and local disk storage.
-- File size and file count restrictions.
-- Server-side file type validation using file signatures.
-- MIME type and file extension consistency checks.
-- Unique filenames to prevent filename collisions.
-- Automatic creation of the uploads directory.
-- Rate limiting to prevent excessive upload requests.
-- Centralized error handling.
-- Automatic cleanup of files when validation fails.
-- File retrieval and deletion endpoints.
+- **Image Upload**
+  - Upload a single image.
+  - Upload multiple images.
+  - Validate file types and file sizes.
+  - List, retrieve, and delete uploaded images.
+
+- **Image Processing**
+  - Resize images with configurable width, height, and fit options.
+  - Generate thumbnails.
+  - Extract image metadata.
+  - Convert images to JPEG, PNG, WebP, and AVIF.
+  - Add watermarks.
+  - Generate responsive image sizes.
+
+- **Security and Middleware**
+  - Helmet for HTTP security headers.
+  - CORS configuration.
+  - Morgan for HTTP request logging.
+  - Upload rate limiting.
+  - Input validation.
+  - Centralized error handling.
+
+- **Static File Serving**
+  - Processed images are accessible through a static URL.
+
+> **Note:** Image caching is not implemented in this project.
 
 ## Technologies
 
 - Node.js
-- Express
 - TypeScript
+- Express.js
 - Multer
-- file-type
-- express-rate-limit
-- dotenv
+- Sharp
+- Helmet
+- CORS
+- Morgan
+- Axios
+- FormData
+
+## Project Structure
+
+```text
+file-upload-api/
+├── src/
+│   ├── app.ts
+│   ├── config/
+│   │   ├── multer.ts
+│   │   └── sharp.ts
+│   ├── controllers/
+│   │   ├── uploadController.ts
+│   │   └── processController.ts
+│   ├── middleware/
+│   │   ├── validation.ts
+│   │   ├── uploadErrorHandler.ts
+│   │   └── rateLimiter.ts
+│   ├── service/
+│   │   └── imageService.ts
+│   ├── routers/
+│   │   ├── upload.ts
+│   │   └── process.ts
+│   └── utils/
+│       └── HttpError.ts
+├── uploads/
+├── processed/
+├── cache/
+├── test-api.js
+├── test-image.jpg
+├── package.json
+└── tsconfig.json
+```
 
 ## Installation
 
 Clone the repository:
 
 ```bash
-git clone YOUR_REPOSITORY_URL
+git clone <your-repository-url>
 cd file-upload-api
 ```
 
@@ -43,23 +93,15 @@ Install dependencies:
 npm install
 ```
 
-## Environment Variables
-
 Create a `.env` file in the project root:
 
 ```env
 PORT=3000
-UPLOAD_DIR=uploads
 MAX_FILE_SIZE_BYTES=5242880
 ALLOWED_FILE_TYPES=image/jpeg,image/png,image/webp
 ```
 
-| Variable              | Description                       |
-| --------------------- | --------------------------------- |
-| `PORT`                | Server port                       |
-| `UPLOAD_DIR`          | Directory for uploaded files      |
-| `MAX_FILE_SIZE_BYTES` | Maximum file size in bytes (5 MB) |
-| `ALLOWED_FILE_TYPES`  | Allowed MIME types                |
+Make sure the `uploads/` and `processed/` directories exist.
 
 ## Running the Server
 
@@ -69,89 +111,224 @@ Start the development server:
 npm run dev
 ```
 
+Build the TypeScript project:
+
+```bash
+npm run build
+```
+
+Start the production server:
+
+```bash
+npm start
+```
+
 The API will be available at:
 
-`http://localhost:3000`
+```text
+http://localhost:3000
+```
 
 ## API Endpoints
 
-### 1. Upload Multiple Files
+### Health Check
 
-**POST** `/api/upload`
+| Method | Endpoint  | Description      |
+| ------ | --------- | ---------------- |
+| GET    | `/health` | Check API status |
 
-Upload up to 5 files in a single request.
+### Upload Endpoints
 
-**Content-Type:** `multipart/form-data`
+| Method | Endpoint                     | Description                |
+| ------ | ---------------------------- | -------------------------- |
+| POST   | `/api/upload/single`         | Upload a single image      |
+| POST   | `/api/upload/multiple`       | Upload multiple images     |
+| GET    | `/api/upload/files`          | Get all uploaded images    |
+| GET    | `/api/upload/file/:filename` | Retrieve an uploaded image |
+| DELETE | `/api/upload/file/:filename` | Delete an uploaded image   |
 
-**Field name:** `files`
+#### Single Image Upload
 
-Example:
-
-```bash
-curl.exe -X POST \
-  -F "files=@photo1.jpg" \
-  -F "files=@photo2.png" \
-  http://localhost:3000/api/upload
+```http
+POST /api/upload/single
+Content-Type: multipart/form-data
 ```
 
-**Success response:** `201 Created`
-
-### 2. Upload a Single File
-
-**POST** `/api/upload/single`
-
-Upload one file.
-
-**Content-Type:** `multipart/form-data`
-
-**Field name:** `file`
-
-Example:
-
-```bash
-curl.exe -X POST \
-  -F "file=@photo.jpg" \
-  http://localhost:3000/api/upload/single
-```
-
-**Success response:** `201 Created`
-
-### 3. Get Uploaded Files
-
-**GET** `/api/upload/files`
-
-Returns information about uploaded files.
-
-### 4. Retrieve a File
-
-**GET** `/api/upload/file/:filename`
-
-Returns a specific uploaded file.
-
-Example:
+Form field:
 
 ```text
-GET /api/upload/file/photo-unique-id.jpg
+file: image.jpg
 ```
 
-### 5. Delete a File
+#### Multiple Image Upload
 
-**DELETE** `/api/upload/file/:filename`
+```http
+POST /api/upload/multiple
+Content-Type: multipart/form-data
+```
 
-Deletes a specific uploaded file.
+Form field:
 
-## Upload Validation
+```text
+files: image1.jpg
+files: image2.jpg
+```
 
-The API applies the following restrictions:
+Maximum number of files: 5.
 
-| Rule                      | Limit           |
-| ------------------------- | --------------- |
-| Maximum file size         | 5 MB per file   |
-| Maximum files per request | 5               |
-| Allowed formats           | JPEG, PNG, WebP |
-| Storage                   | Local disk      |
+### Image Processing Endpoints
 
-File validation includes:
+| Method | Endpoint                            | Description                |
+| ------ | ----------------------------------- | -------------------------- |
+| GET    | `/api/process/metadata/:filename`   | Get image metadata         |
+| POST   | `/api/process/resize/:filename`     | Resize an image            |
+| POST   | `/api/process/thumbnail/:filename`  | Generate a thumbnail       |
+| POST   | `/api/process/convert/:filename`    | Convert image format       |
+| POST   | `/api/process/watermark/:filename`  | Add a watermark            |
+| POST   | `/api/process/responsive/:filename` | Generate responsive images |
 
-- Checking the actual file signature using `file-type`.
-- Ver
+### Processing Examples
+
+#### 1. Resize Image
+
+```http
+POST /api/process/resize/example.jpg
+Content-Type: application/json
+```
+
+```json
+{
+  "width": 800,
+  "height": 600,
+  "fit": "inside"
+}
+```
+
+Available fit options:
+
+- `cover`
+- `contain`
+- `fill`
+- `inside`
+- `outside`
+
+#### 2. Convert Image
+
+```http
+POST /api/process/convert/example.jpg
+Content-Type: application/json
+```
+
+```json
+{
+  "format": "webp",
+  "quality": 85
+}
+```
+
+Supported formats:
+
+- JPEG
+- PNG
+- WebP
+- AVIF
+
+Quality range: 1–100.
+
+#### 3. Generate Thumbnail
+
+```http
+POST /api/process/thumbnail/example.jpg
+```
+
+Creates a thumbnail using the configured dimensions (150 × 150 pixels).
+
+#### 4. Add Watermark
+
+```http
+POST /api/process/watermark/example.jpg
+```
+
+Adds a watermark to the image.
+
+#### 5. Generate Responsive Images
+
+```http
+POST /api/process/responsive/example.jpg
+```
+
+Generates multiple image sizes using the configured responsive widths:
+
+- 320px
+- 640px
+- 1024px
+- 1920px
+
+#### 6. Get Image Metadata
+
+```http
+GET /api/process/metadata/example.jpg
+```
+
+Returns information such as image width, height, format, and file size.
+
+## Accessing Processed Images
+
+Processed images are served statically:
+
+```text
+http://localhost:3000/processed/<filename>
+```
+
+For example:
+
+```text
+http://localhost:3000/processed/resized-example.jpg
+```
+
+## Testing
+
+The project includes a test script that exercises the main API functionality.
+
+Place a test image named `test-image.jpg` in the project root.
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+In another terminal, run:
+
+```bash
+node test-api.js
+```
+
+The script tests:
+
+- Single image upload.
+- Metadata extraction.
+- Image resizing.
+- Thumbnail generation.
+- Format conversion.
+- Watermarking.
+- Responsive image generation.
+
+## Error Handling
+
+The API uses centralized error handling to return consistent JSON error responses.
+
+Common HTTP status codes:
+
+| Status Code | Description            |
+| ----------- | ---------------------- |
+| 400         | Bad Request            |
+| 404         | Resource Not Found     |
+| 413         | Payload Too Large      |
+| 415         | Unsupported Media Type |
+| 429         | Too Many Requests      |
+| 500         | Internal Server Error  |
+
+## License
+
+This project was created for educational purposes as part of a backend development learning project.
