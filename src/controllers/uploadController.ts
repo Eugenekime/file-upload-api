@@ -3,8 +3,7 @@ import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { HttpError } from '../utils/HttpError.js';
 import { unlink } from 'node:fs/promises';
-
-const uploadDirPath = path.resolve(process.cwd(), 'uploads');
+import { uploadDirPath } from '../config/upload.js';
 
 export const uploadFilesController = (
   req: Request,

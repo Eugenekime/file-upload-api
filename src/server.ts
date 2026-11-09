@@ -1,9 +1,8 @@
 import 'dotenv/config';
 
 import express from 'express';
-import path from 'node:path';
 import { mkdir } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { uploadDirPath } from './config/upload.js';
 
 import uploadRouter from './routers/upload.js';
 import { uploadErrorHandler } from './middleware/uploadErrorHandler.js';
@@ -11,10 +10,6 @@ import { uploadErrorHandler } from './middleware/uploadErrorHandler.js';
 const app = express();
 
 const PORT = Number(process.env.PORT ?? 3000);
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const uploadDirPath = path.resolve(__dirname, '../uploads');
 
 app.use(express.json());
 

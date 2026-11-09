@@ -34,6 +34,23 @@ const mimeExtensions: Record<string, string> = {
   'image/png': 'png',
   'image/webp': 'webp',
 };
+export const validateFilename = (filename: string): void => {
+  if (!filename || filename.trim().length === 0) {
+    throw new HttpError('Filename is required', 400);
+  }
+
+  if (filename !== path.basename(filename)) {
+    throw new HttpError('Invalid filename', 400);
+  }
+
+  if (filename.includes('\0')) {
+    throw new HttpError('Filename contains invalid characters', 400);
+  }
+
+  if (!/\.(jpg|jpeg|png|webp|avif)$/i.test(filename)) {
+    throw new HttpError('Unsupported image extension', 415);
+  }
+};
 
 export const validateUploadedFiles: RequestHandler = async (req, res, next) => {
   const files = getUploadedFiles(req);

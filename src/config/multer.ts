@@ -1,14 +1,9 @@
 import multer from 'multer';
-import { fileURLToPath } from 'url';
 import path from 'path';
 import type { Request } from 'express';
 import { randomUUID } from 'node:crypto';
 import { HttpError } from '../utils/HttpError.js';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const uploadDirPath = path.join(__dirname, '..', '..', 'uploads');
+import { uploadDirPath } from './upload.js';
 
 const maxFileSize = Number(process.env.MAX_FILE_SIZE_BYTES ?? 5242880);
 
