@@ -3,6 +3,7 @@ import type { RequestHandler } from 'express';
 import { fileTypeFromFile } from 'file-type';
 import { unlink } from 'node:fs/promises';
 import { HttpError } from '../utils/HttpError.js';
+import path from 'node:path';
 import { imageConfig } from '../config/sharp.js';
 
 const maxFileSize = Number(process.env.MAX_FILE_SIZE_BYTES ?? 5242880);
@@ -29,6 +30,24 @@ const getUploadedFiles = (req: Request) => {
   }
 
   return files;
+};
+
+export const validateFilename = (filename: string): void => {
+  if (!filename || filename.trim().length === 0) {
+    throw new HttpError('Filename is required', 400);
+  }
+
+  if (filename !== path.basename(filename)) {
+    throw new HttpError('Invalid filename', 400);
+  }
+
+  if (filename.includes('\0')) {
+    throw new HttpError('Filename contains invalid characters', 400);
+  }
+
+  if (!/\.(jpg|jpeg|png|webp|avif)$/i.test(filename)) {
+    throw new HttpError('Unsupported image extension', 415);
+  }
 };
 
 export const validateUploadedFiles: RequestHandler = async (req, res, next) => {

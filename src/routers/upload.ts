@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import upload from '../config/multer.js';
-import { validateUploadedFiles } from '../middleware/validation.js';
+import {
+  validateFilename,
+  validateUploadedFiles,
+} from '../middleware/validation.js';
 import { uploadRateLimiter } from '../middleware/rateLimiter.js';
 import {
   deleteUploadedFileController,
@@ -29,7 +32,11 @@ router.post(
 );
 
 router.get('/files', getUploadedFilesController);
-router.get('/file/:filename', getUploadedFileController);
-router.delete('/file/:filename', deleteUploadedFileController);
+router.get('/file/:filename', validateFilename, getUploadedFileController);
+router.delete(
+  '/file/:filename',
+  validateFilename,
+  deleteUploadedFileController
+);
 
 export default router;

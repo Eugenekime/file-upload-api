@@ -43,8 +43,6 @@ The API supports single and multiple image uploads, resizing, thumbnails, respon
 - Helmet
 - CORS
 - Morgan
-- Axios
-- FormData
 
 ## Project Structure
 
@@ -67,11 +65,11 @@ file-upload-api/
 │   ├── routers/
 │   │   ├── upload.ts
 │   │   └── process.ts
-│   └── utils/
-│       └── HttpError.ts
+│   |── utils/
+|   |   └── HttpError.ts
+|   └── server.ts
 ├── uploads/
 ├── processed/
-├── cache/
 ├── test-api.js
 ├── test-image.jpg
 ├── package.json
