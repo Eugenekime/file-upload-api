@@ -19,7 +19,6 @@ export const uploadFilesController = (
       filename: file.filename,
       mimeType: file.mimetype,
       size: file.size,
-      path: file.path,
     }));
 
     res.status(201).json({
@@ -47,7 +46,6 @@ export const uploadSingleFileController = (req: Request, res: Response) => {
       filename: file.filename,
       mimeType: file.mimetype,
       size: file.size,
-      path: file.path,
     },
   });
 };

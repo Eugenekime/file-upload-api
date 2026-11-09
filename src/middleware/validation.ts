@@ -1,8 +1,10 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { RequestHandler } from 'express';
 import { fileTypeFromFile } from 'file-type';
-import { unlink } from 'node:fs/promises';
 import { HttpError } from '../utils/HttpError.js';
+import { randomUUID } from 'node:crypto';
+import { rename, unlink } from 'node:fs/promises';
+import path from 'node:path';
 
 const maxFileSize = Number(process.env.MAX_FILE_SIZE_BYTES ?? 5242880);
 
@@ -26,6 +28,11 @@ const getUploadedFiles = (req: Request) => {
   }
 
   return files;
+};
+const mimeExtensions: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
 };
 
 export const validateUploadedFiles: RequestHandler = async (req, res, next) => {
@@ -51,6 +58,25 @@ export const validateUploadedFiles: RequestHandler = async (req, res, next) => {
       if (!detectedType || !allowedTypes.includes(detectedType.mime)) {
         throw new HttpError(`Invalid file type: ${file.originalname}`, 415);
       }
+      if (file.mimetype !== detectedType.mime) {
+        throw new HttpError(
+          `MIME type does not match file content: ${file.originalname}`,
+          415
+        );
+      }
+      const extension = mimeExtensions[detectedType.mime];
+
+      if (!extension) {
+        throw new HttpError('Unsupported file extension', 415);
+      }
+
+      const filename = `${randomUUID()}.${extension}`;
+      const newPath = path.join(file.destination, filename);
+
+      await rename(file.path, newPath);
+
+      file.filename = filename;
+      file.path = newPath;
     }
 
     next();
